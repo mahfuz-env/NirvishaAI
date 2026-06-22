@@ -55,8 +55,8 @@ func main() {
 		})
 
 		r.Route("/report", func(r chi.Router) {
-			r.Post("/pdf/{id}", handlers.GeneratePDF)
-			r.Post("/md/{id}", handlers.GenerateMD)
+			r.Get("/pdf/{id}", handlers.GeneratePDF)
+			r.Get("/md/{id}", handlers.GenerateMD)
 		})
 	})
 
