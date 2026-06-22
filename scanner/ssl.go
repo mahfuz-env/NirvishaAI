@@ -78,6 +78,7 @@ func checkHTTPSRedirect(domain string) bool {
 	defer resp.Body.Close()
 
 	loc := resp.Header.Get("Location")
-	return (resp.StatusCode == 301 || resp.StatusCode == 302) &&
-		len(loc) > 0 && loc[:5] == "https"
+	isRedirect := resp.StatusCode == 301 || resp.StatusCode == 302 ||
+		resp.StatusCode == 307 || resp.StatusCode == 308
+	return isRedirect && len(loc) > 0 && loc[:5] == "https"
 }
