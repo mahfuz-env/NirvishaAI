@@ -36,20 +36,23 @@ func StartDNSVerification(w http.ResponseWriter, r *http.Request) {
 	}
 
 	domain := cleanDomain(req.Domain)
-	token := generateToken(domain)
 
-	record := VerificationRecord{
-		Domain:    domain,
-		Token:     token,
-		Method:    "dns",
-		Verified:  false,
-		CreatedAt: time.Now(),
+	// Reuse existing token if already initiated (prevents DNS mismatch on re-submit)
+	var record VerificationRecord
+	if err := store.Get(store.VerifyKey(domain), &record); err != nil || record.Verified {
+		record = VerificationRecord{
+			Domain:    domain,
+			Token:     generateToken(domain),
+			Method:    "dns",
+			Verified:  false,
+			CreatedAt: time.Now(),
+		}
+		if err := store.Set(store.VerifyKey(domain), record, store.TTLVerification); err != nil {
+			jsonError(w, "failed to store verification", http.StatusInternalServerError)
+			return
+		}
 	}
-
-	if err := store.Set(store.VerifyKey(domain), record, store.TTLVerification); err != nil {
-		jsonError(w, "failed to store verification", http.StatusInternalServerError)
-		return
-	}
+	token := record.Token
 
 	jsonOK(w, map[string]string{
 		"domain":      domain,
