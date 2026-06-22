@@ -171,17 +171,21 @@ func runScanAsync(scanID, domain string) {
 		store.Set(store.ScanKey(scanID), current, store.TTLScanResult)
 	})
 
-	// AI analysis
-	aiVulns, aiErr := ai.AnalyzeVulnerabilities(result.Checks)
-	if aiErr != nil {
-		log.Printf("[AI] analysis failed for scan %s: %v", scanID, aiErr)
-	} else {
-		log.Printf("[AI] analysis completed for scan %s — %d vulns explained", scanID, len(aiVulns))
-	}
-	result.AIAnalysis = aiVulns
-
+	// Mark scan completed immediately — frontend shows results without waiting for AI
 	store.Set(store.ScanKey(scanID), result, store.TTLScanResult)
 	store.SetString(store.ScanProgressKey(scanID), "completed", store.TTLScanResult)
+
+	// AI analysis runs in background — updates result when done
+	go func() {
+		aiVulns, aiErr := ai.AnalyzeVulnerabilities(result.Checks)
+		if aiErr != nil {
+			log.Printf("[AI] analysis failed for scan %s: %v", scanID, aiErr)
+			return
+		}
+		log.Printf("[AI] analysis completed for scan %s — %d vulns explained", scanID, len(aiVulns))
+		result.AIAnalysis = aiVulns
+		store.Set(store.ScanKey(scanID), result, store.TTLScanResult)
+	}()
 }
 
 func realIP(r *http.Request) string {
