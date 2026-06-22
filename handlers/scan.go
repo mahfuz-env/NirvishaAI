@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -171,7 +172,12 @@ func runScanAsync(scanID, domain string) {
 	})
 
 	// AI analysis
-	aiVulns, _ := ai.AnalyzeVulnerabilities(result.Checks)
+	aiVulns, aiErr := ai.AnalyzeVulnerabilities(result.Checks)
+	if aiErr != nil {
+		log.Printf("[AI] analysis failed for scan %s: %v", scanID, aiErr)
+	} else {
+		log.Printf("[AI] analysis completed for scan %s — %d vulns explained", scanID, len(aiVulns))
+	}
 	result.AIAnalysis = aiVulns
 
 	store.Set(store.ScanKey(scanID), result, store.TTLScanResult)
