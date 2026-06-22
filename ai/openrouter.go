@@ -79,7 +79,7 @@ func callOpenRouter(model, prompt string) ([]scanner.AIVuln, error) {
 	req.Header.Set("HTTP-Referer", "https://nirvishaai.com")
 	req.Header.Set("X-Title", "NirvishaAI")
 
-	client := &http.Client{Timeout: 30 * time.Second}
+	client := &http.Client{Timeout: 90 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
