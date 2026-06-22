@@ -19,7 +19,8 @@ func main() {
 	config.Load()
 
 	if err := store.InitRedis(); err != nil {
-		log.Fatalf("Redis connection failed: %v", err)
+		log.Printf("WARNING: Redis connection failed: %v", err)
+		log.Printf("Server will start but scan/verify features will not work until Redis is available")
 	}
 	defer store.Close()
 
